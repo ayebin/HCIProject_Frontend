@@ -9,7 +9,7 @@ import 'package:travelmate/userProvider.dart';
 import 'package:travelmate/infoProvider.dart';
 import 'package:travelmate/sessionProvider.dart';
 import 'dart:math';
-
+import 'package:travelmate/page/login_page.dart';
 
 class ChatScreen extends StatefulWidget {
   String chatTitle;
@@ -82,6 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
         final responseMessage = await _sendMessageToBackend(message, url, sessionID, infoID);
 
         Provider.of<MessageProvider>(context, listen: false).addMessage(responseMessage, 'answer');
+
       } catch (e) {
         Provider.of<MessageProvider>(context, listen: false).addMessage('오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'answer');
       }
@@ -126,9 +127,50 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         elevation: 0, // 그림자 제거
       ),
-      drawer: Drawer(
-        child: ChatDrawer(),
+      drawer: Builder(
+        builder: (context) {
+          if (_userId == 1) {
+            // userId가 1인 경우 팝업만 띄우고 Drawer는 열리지 않게 설정
+            Future.delayed(Duration.zero, () {
+              // Drawer를 닫아주는 명령 추가
+              Navigator.of(context).pop();
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('로그인이 필요합니다'),
+                  content: Text('로그인 후에 나의 여행지 기능을 사용할 수 있습니다.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context); // 팝업만 닫기
+                      },
+                      child: Text('닫기'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context); // 팝업 닫기
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      },
+                      child: Text('로그인하러 가기'),
+                    ),
+                  ],
+                ),
+              );
+            });
+            return SizedBox.shrink(); // Drawer를 비활성화
+          } else {
+            // userId가 1이 아닌 경우 ChatDrawer를 표시
+            return Drawer(
+              child: ChatDrawer(),
+            );
+          }
+        },
       ),
+
+
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
